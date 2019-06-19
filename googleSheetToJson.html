@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Google Spreadsheets</title>
+  <style>
+    [v-cloak] {
+      display: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #f7f7f7;
+    }
+    #app {
+      padding: 30px;
+      max-width: 1200px;
+      margin: 30px auto;
+      background: #fff;
+      min-height: 80%;
+      border-radius: 10px;
+      box-shadow: 5px 5px 10px #ececec;
+    }
+    #result {
+      background: #eee;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+      margin-top: 10px;
+    }
+    input{
+      padding: 6px 10px;
+      border-radius: 3px;
+      background: transparent;
+      border: 1px solid #ddd;
+      outline: none;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    input.sheetUrl {
+      width: 650px;
+    }
+    input.sheetNum {
+      width: 50px;
+    }
+    .copy-block {
+      margin-top: 60px;
+      text-align: right;
+    }
+    button {
+      background: #228be6;
+      color: #fff;
+      border-radius: 5px;
+      padding: 5px 12px;
+      outline: none;
+      border: none;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .copy-block button:disabled {
+      background: #83b7e4;
+      cursor: not-allowed;
+    }
+    .empty-text {
+      color: #b1b1b1;
+      font-size: 14px;
+    }
+    .form p span{
+      width: 120px;
+      text-align: right;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+    <div id="app" v-cloak>
+      <div class="form">
+        <p>
+            <span>試算表網址：</span>
+            <input class="sheetUrl" type="text" v-model="sheetUrl" placeholder="請輸入試算表網址"> 
+        </p>
+        <p>
+            <span>sheet：</span>
+            <input class="sheetNum" type="text" v-model="sheetNum" placeholder="1"> 
+        </p>
+        <p>
+            <span></span>
+            <button @click="getJson" >產生JSON</button>
+        </p>
+      </div>
+
+      <div class="copy-block">
+        <button @click="copy" :disabled="!json_data">複製JSON</button>
+      </div>
+      <div id="result">
+        <span v-if="loading"> loading... </span>
+        <pre v-else-if="json_data" id="json-block">{{ JSON.stringify(json_data, undefined, 2) }}</pre>
+        <span class="empty-text" v-else>沒有資料</span>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js"></script>
+    <script>
+      Vue.config.devtools = true;
+      new Vue({
+        name: 'App',
+        el: '#app',
+        data() {
+          return {
+            sheetUrl: '',
+            sheetId: '',
+            sheetNum: '1',
+            json_data: null,
+            loading: false
+          }
+        },
+        methods: {
+          getJson() {
+            if(!this.findSheetId()) return false;
+            const _this = this;
+
+            _this.loading = true
+            axios.get(`https://spreadsheets.google.com/feeds/list/${_this.sheetId}/${this.sheetNum}/public/values?alt=json`)
+              .then(function (response) {
+                _this.json_data = _this.buildJson(response);
+              })
+              .catch(function (error) {
+                console.log(error);
+              })
+              .finally(function () {
+                _this.loading = false
+              });
+
+          },
+          findSheetId() {
+            const url = this.sheetUrl.split('/');
+            let target = url.findIndex( n => n === 'd');
+            if(target > -1) {
+              this.sheetId = url[target+1];
+              return true
+            }
+            return false;
+          },
+          buildJson(response) {
+            const { data } = response;
+            let rows = [];
+              if (data && data.feed && data.feed.entry) {
+                data.feed.entry.forEach(entry => {
+                  const keys = Object.keys(entry);
+                  let newRow = {};
+
+                  keys.forEach(key => {
+                    const gsxCheck = key.indexOf('gsx$');
+                    if(gsxCheck > -1) {
+                      const name = key.substring(4);
+                      const content = entry[key];
+                      const value = content.$t;
+                      if(['oid', 'sourcelang', 'targetlang'].indexOf(name) > -1) {
+                        const keyName = name === 'oid' ? 'prodOid' : name
+                        newRow[keyName] = value;
+                      }
+                    }
+                  });
+
+                  rows.push(newRow);
+                }); 
+
+                return rows;
+              } else {
+                return null
+              }
+          },
+          copy() {
+            let TextRange = document.createRange();
+            TextRange.selectNode(document.getElementById('json-block'));
+            sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(TextRange);
+            document.execCommand("copy");
+            alert("已複製到剪貼簿。");
+          }
+        }
+      })
+    </script>
+</body>
+</html>
