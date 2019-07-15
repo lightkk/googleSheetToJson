@@ -159,7 +159,18 @@
                       const content = entry[key];
                       const value = content.$t;
                       if(['oid', 'sourcelang', 'targetlang'].indexOf(name) > -1) {
-                        const keyName = name === 'oid' ? 'prodOid' : name
+                        let keyName = '';
+                        switch(name) {
+                          case 'oid':
+                            keyName = 'prodOid';
+                            break;
+                          case 'sourcelang':
+                            keyName = 'sourceLang';
+                            break;
+                          case 'targetlang':
+                            keyName = 'targetLang';
+                            break;
+                        }
                         newRow[keyName] = value;
                       }
                     }
