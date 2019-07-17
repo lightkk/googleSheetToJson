@@ -23,6 +23,23 @@ module.exports = {
         loader:'vue-loader'
       },
       {
+        test: /\.(scss|sass)$/,
+        use: [
+          'style-loader',
+          'css-loader',
+          {
+            loader: 'postcss-loader',
+            options: {
+              ident: 'postcss',
+              plugins: [
+                require('autoprefixer')
+              ]
+            }
+          },
+          'sass-loader'
+        ]
+      },
+      {
         test: /\.(gif|jpg|jpeg|svg)/,
         use: [
             {

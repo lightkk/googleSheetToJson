@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import './main.css';
+import './main.scss';
 import App from './app.vue';
 
 let root = document.createElement('div');
