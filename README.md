@@ -1,8 +1,8 @@
-Turn Google Spreadsheets to Json
+Turn Google Spreadsheets to Json 
 
 [preview page](https://lightkk.github.io/googleSheetToJson/)
 
-with Travis CI
+(Compile to preview page by Travis CI)
 
 ## Project setup
 ```
