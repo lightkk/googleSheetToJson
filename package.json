@@ -20,7 +20,7 @@
   },
   "homepage": "https://github.com/lightkk/googleSheetToJson#readme",
   "dependencies": {
-    "axios": "^0.19.0",
+    "axios": "^0.21.1",
     "css-loader": "^3.0.0",
     "vue": "^2.6.10",
     "vue-loader": "^15.7.0",
